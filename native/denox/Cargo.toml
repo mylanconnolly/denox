@@ -1,0 +1,15 @@
+[package]
+name = "denox"
+version = "0.1.0"
+authors = []
+edition = "2021"
+
+[lib]
+name = "denox"
+path = "src/lib.rs"
+crate-type = ["cdylib"]
+
+[dependencies]
+rustler = "0.35.0"
+deno_core = "0.322.0"
+tokio = { version = "1.36", features = ["full"] }
