@@ -23,6 +23,11 @@ defmodule DenoxTest do
     assert Denox.eval_js("42") == 42
   end
 
+  test "casts booleans" do
+    assert Denox.eval_js("true") == true
+    assert Denox.eval_js("false") == false
+  end
+
   test "casts objects to maps" do
     # Wrap the object in parentheses to ensure it's parsed as an object and not
     # a block

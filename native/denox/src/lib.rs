@@ -38,7 +38,13 @@ fn v8_value_to_term<'a>(
     scope: &mut v8::HandleScope,
     value: v8::Local<v8::Value>,
 ) -> Result<Term<'a>, Error> {
-    if value.is_number() {
+    if value.is_boolean() {
+        // Convert to boolean object and get its value
+        let boolean = v8::Local::<v8::Boolean>::try_from(value)
+            .map_err(|_| Error::Term(Box::new("Failed to cast to boolean")))?;
+        let bool_val = boolean.boolean_value(scope);
+        Ok(bool_val.encode(env))
+    } else if value.is_number() {
         let num = value
             .to_number(scope)
             .ok_or_else(|| Error::Term(Box::new("Failed to convert number")))?;
@@ -98,7 +104,6 @@ fn v8_value_to_term<'a>(
                 .to_rust_string_lossy(scope);
             let value_term = v8_value_to_term(env, scope, value)?;
 
-            // Fix map_put usage - it's a method on Term, not a static function
             map = map.map_put(key_str.encode(env), value_term)?;
         }
 
@@ -122,6 +127,10 @@ fn term_to_v8_value<'a>(
     scope: &mut v8::HandleScope<'a>,
     term: Term,
 ) -> Result<v8::Local<'a, v8::Value>, Error> {
+    if let Ok(b) = term.decode::<bool>() {
+        return Ok(v8::Boolean::new(scope, b).into());
+    }
+
     if term.is_number() {
         if let Ok(n) = term.decode::<f64>() {
             return Ok(v8::Number::new(scope, n).into());
