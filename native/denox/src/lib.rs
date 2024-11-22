@@ -43,14 +43,16 @@ fn v8_value_to_term<'a>(
             .to_number(scope)
             .ok_or_else(|| Error::Term(Box::new("Failed to convert number")))?;
 
-        // Use to_integer() to check if it's an integer
-        if num.to_integer(scope).is_some() {
-            let int_val = num
-                .integer_value(scope)
-                .ok_or_else(|| Error::Term(Box::new("Failed to convert integer")))?;
+        // Get the actual float value
+        let float_val = num.value();
+
+        // Check if it's actually an integer by comparing with floor
+        if float_val == float_val.floor() {
+            // It's a whole number, convert to integer
+            let int_val = float_val as i64;
             Ok(int_val.encode(env))
         } else {
-            let float_val = num.value();
+            // It's a decimal number, keep as float
             Ok(float_val.encode(env))
         }
     } else if value.is_array() {
