@@ -51,20 +51,46 @@ jobs:
             libglib2.0-dev libglib2.0-0 libgtk-3-dev \
             libatk1.0-dev libatk-bridge2.0-dev libgdk-pixbuf2.0-dev \
             libpango1.0-dev libcairo2-dev libnss3-dev libxss-dev
+      
+      - name: Install V8 development packages on Linux
+        if: runner.os == 'Linux'
+        run: |
+          # Install Deno which includes V8
+          curl -fsSL https://deno.land/install.sh | sh
+          echo "$HOME/.deno/bin" >> $GITHUB_PATH
+          
+          # Run our extraction script
+          chmod +x ./scripts/extract_v8.sh
+          ./scripts/extract_v8.sh
+          
+          # Copy the extracted libraries to system locations
+          sudo cp -r v8_extract/lib/* /usr/local/lib/
+          sudo cp -r v8_extract/include/* /usr/local/include/
+          sudo ldconfig
+          
+          # Set environment variables for finding V8
+          echo "LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH" >> $GITHUB_ENV
 
       - name: Set up environment for V8 compilation
         run: |
+          # Set common environment variables
           echo "RUSTFLAGS=-C link-arg=-s" >> $GITHUB_ENV
-          # Use pre-built V8 binaries instead of building from source
-          echo "V8_FROM_SOURCE=0" >> $GITHUB_ENV
-          # Don't force static linking on Linux
-          if [ "$(uname)" != "Linux" ]; then
-            echo "V8_FORCE_STATIC=1" >> $GITHUB_ENV
-          fi
           echo "PKG_CONFIG_PATH=/usr/lib/pkgconfig:/usr/share/pkgconfig" >> $GITHUB_ENV
-          # Set reasonable timeout for compilation
           echo "RUSTC_BOOTSTRAP=1" >> $GITHUB_ENV
           echo "CARGO_NET_RETRY=10" >> $GITHUB_ENV
+          
+          # Linux-specific settings
+          if [ "$(uname)" = "Linux" ]; then
+            echo "V8_FROM_SOURCE=0" >> $GITHUB_ENV
+            echo "V8_FORCE_STATIC=0" >> $GITHUB_ENV
+            echo "CFLAGS=-fPIC" >> $GITHUB_ENV
+            echo "CXXFLAGS=-fPIC" >> $GITHUB_ENV
+            echo "RUSTFLAGS=$RUSTFLAGS -C link-arg=-Wl,--no-as-needed -C link-arg=-ldl -C link-arg=-Wl,--allow-multiple-definition" >> $GITHUB_ENV
+          else
+            # macOS settings
+            echo "V8_FROM_SOURCE=0" >> $GITHUB_ENV
+            echo "V8_FORCE_STATIC=1" >> $GITHUB_ENV
+          fi
 
       - name: Cache Rust dependencies
         uses: Swatinem/rust-cache@v2

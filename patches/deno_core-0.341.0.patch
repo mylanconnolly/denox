@@ -1,0 +1,18 @@
+diff --git a/build.rs b/build.rs
+index 1234567..abcdef0 100644
+--- a/build.rs
++++ b/build.rs
+@@ -1,6 +1,13 @@
+ // Copyright 2018-2024 the Deno authors. All rights reserved. MIT license.
+ 
+ fn main() {
++  // Detect the target OS
++  let target_os = std::env::var("CARGO_CFG_TARGET_OS").unwrap_or_default();
++  
++  if target_os == "linux" {
++    println!("cargo:rustc-link-arg=-Wl,--allow-multiple-definition");
++  }
++  
+   // This tells cargo to rerun this script if build_v8.rs is changed.
+   println!("cargo:rerun-if-changed=build_v8.rs");
+ }

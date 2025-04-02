@@ -19,5 +19,9 @@ tokio = { version = "1.36", features = ["full"] }
 [features]
 default = []
 
-[target.'cfg(target_os = "linux")'.dependencies]
-v8 = { version = "135.1.0", features = ["shared"] }
+# Build dependencies for all platforms
+[build-dependencies]
+cc = "1.0"
+
+[patch.crates-io]
+deno_core = { version = "0.341.0", path = "../../patches/deno_core-0.341.0" }
