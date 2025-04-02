@@ -10,5 +10,10 @@ fn main() {
         
         // Tell rustc to use the -rdynamic flag
         println!("cargo:rustc-link-arg=-rdynamic");
+        
+        // Add specific flags for V8
+        println!("cargo:rustc-link-arg=-Wl,-z,muldefs");
+        println!("cargo:rustc-link-arg=-Wl,--no-undefined");
+        println!("cargo:rustc-link-arg=-Wl,--copy-dt-needed-entries");
     }
 }

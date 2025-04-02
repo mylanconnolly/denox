@@ -2,8 +2,19 @@ use deno_core::v8;
 use deno_core::JsRuntime;
 use rustler::{Atom, Encoder, Env, Error, Term};
 
+// Initialize V8 once per process
+static INIT: std::sync::Once = std::sync::Once::new();
+
 #[rustler::nif]
 fn eval_js<'a>(env: Env<'a>, code: String, bindings: Term<'a>) -> Result<Term<'a>, Error> {
+    // Initialize V8 only once
+    INIT.call_once(|| {
+        // This ensures V8 is initialized only once per process
+        let platform = deno_core::v8::new_default_platform(0, false).make_shared();
+        deno_core::v8::V8::initialize_platform(platform);
+        deno_core::v8::V8::initialize();
+    });
+    
     let mut runtime = JsRuntime::new(Default::default());
     let scope = &mut runtime.handle_scope();
     let context = scope.get_current_context();
