@@ -11,5 +11,6 @@ crate-type = ["cdylib"]
 
 [dependencies]
 rustler = "0.36.1"
-deno_core = "0.341.0"
+deno_core = { version = "0.341.0", features = ["include_icu_data"] }
 tokio = { version = "1.36", features = ["full"] }
+zerofrom = { version = "0.1.4", features = ["derive"] }
