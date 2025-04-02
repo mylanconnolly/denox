@@ -8,7 +8,7 @@ on:
 
 jobs:
   build:
-    name: Build and test (Elixir ${{ matrix.elixir }} | OTP ${{ matrix.otp }})
+    name: Build and test (Elixir ${{ matrix.elixir }} | OTP ${{ matrix.otp }} | Rust ${{ matrix.rust }})
     runs-on: ubuntu-latest
 
     strategy:
@@ -17,6 +17,7 @@ jobs:
       matrix:
         elixir: ["1.17", "1.18"]
         otp: ["26", "27"]
+        rust: ["1.85.1"]
 
     env:
       MIX_ENV: test
@@ -34,8 +35,38 @@ jobs:
         uses: actions/cache@v3
         with:
           path: deps
-          key: ${{ runner.os }}-${{ matrix.elixir }}-${{ matrix.otp }}-mix-${{ hashFiles('**/mix.lock') }}
-          restore-keys: ${{ runner.os }}-${{ matrix.elixir }}-${{ matrix.otp }}-mix-
+          key: ${{ runner.os }}-mix-${{ matrix.elixir }}-${{ matrix.otp }}-${{ hashFiles('**/mix.lock') }}
+          restore-keys: ${{ runner.os }}-mix-${{ matrix.elixir }}-${{ matrix.otp }}-
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ matrix.rust }}
+          components: rustfmt, clippy
+
+      - name: Install system dependencies for V8
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential pkg-config libssl-dev \
+            libglib2.0-dev libglib2.0-0 libgtk-3-dev \
+            libatk1.0-dev libatk-bridge2.0-dev libgdk-pixbuf2.0-dev \
+            libpango1.0-dev libcairo2-dev libnss3-dev libxss-dev
+
+      - name: Set up environment for V8 compilation
+        run: |
+          echo "RUSTFLAGS=-C link-arg=-s" >> $GITHUB_ENV
+          # Use pre-built V8 binaries instead of building from source
+          echo "V8_FROM_SOURCE=0" >> $GITHUB_ENV
+          echo "V8_FORCE_STATIC=1" >> $GITHUB_ENV
+          echo "PKG_CONFIG_PATH=/usr/lib/pkgconfig:/usr/share/pkgconfig" >> $GITHUB_ENV
+          # Set reasonable timeout for compilation
+          echo "RUSTC_BOOTSTRAP=1" >> $GITHUB_ENV
+          echo "CARGO_NET_RETRY=10" >> $GITHUB_ENV
+
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: "rust-${{ matrix.elixir }}-${{ matrix.otp }}-${{ matrix.rust }}"
 
       - name: Install dependencies
         run: mix deps.get
