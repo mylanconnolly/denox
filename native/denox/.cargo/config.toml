@@ -1,5 +1,14 @@
 [target.'cfg(target_os = "macos")']
+rustflags = ["-C", "link-arg=-undefined", "-C", "link-arg=dynamic_lookup"]
+
+[target.'cfg(target_os = "linux")']
 rustflags = [
-    "-C", "link-arg=-undefined",
-    "-C", "link-arg=dynamic_lookup",
+    "-C",
+    "link-arg=-Wl,-z,noexecstack",
+    "-C",
+    "link-arg=-Wl,--no-as-needed",
+    "-C",
+    "link-arg=-ldl",
+    "-C",
+    "link-arg=-Wl,--allow-multiple-definition",
 ]

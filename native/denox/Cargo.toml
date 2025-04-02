@@ -11,5 +11,13 @@ crate-type = ["cdylib"]
 
 [dependencies]
 rustler = "0.36.1"
-deno_core = "0.341.0"
+deno_core = { version = "0.341.0", features = [
+  "include_js_files_for_snapshotting",
+] }
 tokio = { version = "1.36", features = ["full"] }
+
+[features]
+default = []
+
+[target.'cfg(target_os = "linux")'.dependencies]
+v8 = { version = "135.1.0", features = ["shared"] }

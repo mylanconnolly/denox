@@ -57,7 +57,10 @@ jobs:
           echo "RUSTFLAGS=-C link-arg=-s" >> $GITHUB_ENV
           # Use pre-built V8 binaries instead of building from source
           echo "V8_FROM_SOURCE=0" >> $GITHUB_ENV
-          echo "V8_FORCE_STATIC=1" >> $GITHUB_ENV
+          # Don't force static linking on Linux
+          if [ "$(uname)" != "Linux" ]; then
+            echo "V8_FORCE_STATIC=1" >> $GITHUB_ENV
+          fi
           echo "PKG_CONFIG_PATH=/usr/lib/pkgconfig:/usr/share/pkgconfig" >> $GITHUB_ENV
           # Set reasonable timeout for compilation
           echo "RUSTC_BOOTSTRAP=1" >> $GITHUB_ENV
