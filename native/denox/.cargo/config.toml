@@ -2,4 +2,4 @@
 rustflags = ["-C", "link-arg=-undefined", "-C", "link-arg=dynamic_lookup"]
 
 [target.'cfg(target_os = "linux")']
-rustflags = ["-C", "link-arg=-Wl,--export-dynamic"]
+rustflags = ["-C", "link-arg=-Wl,--export-dynamic", "-C", "link-arg=-Wl,--allow-multiple-definition"]
